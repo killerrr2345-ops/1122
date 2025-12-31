@@ -50,11 +50,16 @@
         <div class="main-message">Happy New Year Mri jan😘😘😘</div>
         <div class="sub-message">Love you So Much ❤️❤️❤️</div>
     </div>
+    
+    <audio id="explosionSound" src="https://actions.google.com/sounds/v1/science_fiction/low_fizzly_explosion.ogg" preload="auto"></audio>
+
     <canvas id="canvas"></canvas>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const sound = document.getElementById('explosionSound');
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -99,7 +104,15 @@
 
         let particles = [];
 
+        function playSound() {
+            // Har baar naya sound clone taake overlap ho sakein
+            const newSound = sound.cloneNode();
+            newSound.volume = 0.5;
+            newSound.play().catch(() => { /* Auto-play block handle */ });
+        }
+
         function createFirework(x, y) {
+            playSound(); // Sound play karein
             const particleCount = 100;
             const hue = Math.random() * 360;
             const color = `hsl(${hue}, 100%, 70%)`;
@@ -140,7 +153,8 @@
             }
         }
 
-        canvas.addEventListener('click', (e) => {
+        // Jab user pehli baar click karega tab sound activate ho jayega
+        canvas.addEventListener('mousedown', (e) => {
             createFirework(e.clientX, e.clientY);
         });
 
