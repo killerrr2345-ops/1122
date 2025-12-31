@@ -30,43 +30,23 @@
         <div class="sub-message">Love you So Much ❤️❤️❤️</div>
     </div>
 
+    <audio id="fireworkSound" src="fireworks.mp3" preload="auto"></audio>
+
     <script>
         const canvas = document.createElement('canvas');
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
+        const sound = document.getElementById('fireworkSound');
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Realistic Short Explosion Sound (Base64)
-        const explosionSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="); 
-        // Note: Real fireworks sounds are large, so we use a high-quality synth approach below for "boom"
-        
-        let audioCtx = null;
-
-        function playBoom() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
-
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.4);
+        // Purana synthetic sound wala function hata kar naya MP3 wala function
+        function playMP3Sound() {
+            if (sound) {
+                let s = sound.cloneNode(); // Taaki har blast par sound repeat ho
+                s.play().catch(e => console.log("Sound play error: Tap on screen first"));
+            }
         }
 
         class Particle {
@@ -98,7 +78,7 @@
         let particles = [];
 
         function createFirework(x, y) {
-            playBoom();
+            playMP3Sound(); // Ab yahan MP3 chalegi
             const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
             for (let i = 0; i < 100; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -118,6 +98,7 @@
             requestAnimationFrame(animate);
         }
 
+        // Click karne par sound activate hogi
         window.addEventListener('click', (e) => {
             createFirework(e.clientX, e.clientY);
         });
