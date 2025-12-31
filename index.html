@@ -12,12 +12,12 @@
             width: 100%; text-align: center; z-index: 10; pointer-events: none;
         }
         .main-message {
-            color: white; font-family: 'Arial Black', sans-serif; font-size: 3.2rem;
+            color: white; font-family: 'Arial Black', sans-serif; font-size: 3rem;
             text-transform: uppercase; text-shadow: 0 0 15px #ff00de, 0 0 30px #ff00de;
-            animation: pulse 2s infinite; padding: 10px;
+            animation: pulse 2s infinite; padding: 10px; line-height: 1.2;
         }
         .sub-message {
-            color: #ff4d94; font-family: 'Trebuchet MS', sans-serif; font-size: 1.6rem;
+            color: #ff4d94; font-family: 'Trebuchet MS', sans-serif; font-size: 1.5rem;
             font-weight: bold; text-shadow: 0 0 10px rgba(255, 77, 148, 0.8);
         }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -37,29 +37,36 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Audio Context for direct sound generation
+        // Realistic Short Explosion Sound (Base64)
+        const explosionSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="); 
+        // Note: Real fireworks sounds are large, so we use a high-quality synth approach below for "boom"
+        
         let audioCtx = null;
 
-        function playExplosionSound() {
+        function playBoom() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            const oscillator = audioCtx.createOscillator();
+            const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
 
-            oscillator.type = 'sawtooth';
-            // Phatike ki bhari awaz ke liye low frequency
-            oscillator.frequency.setValueAtTime(100 + Math.random() * 50, audioCtx.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
 
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
 
-            oscillator.connect(gain);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+            osc.connect(filter);
+            filter.connect(gain);
             gain.connect(audioCtx.destination);
 
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
         }
 
         class Particle {
@@ -67,22 +74,22 @@
                 this.x = x; this.y = y; this.color = color;
                 this.v = { x: vX, y: vY };
                 this.alpha = 1;
-                this.decay = Math.random() * 0.02 + 0.01;
+                this.decay = Math.random() * 0.015 + 0.005;
             }
             draw() {
                 ctx.save();
                 ctx.globalAlpha = this.alpha;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
-                ctx.shadowBlur = 12;
+                ctx.shadowBlur = 15;
                 ctx.shadowColor = this.color;
                 ctx.fill();
                 ctx.restore();
             }
             update() {
-                this.v.x *= 0.94; this.v.y *= 0.94;
-                this.v.y += 0.15; // Gravity
+                this.v.x *= 0.96; this.v.y *= 0.96;
+                this.v.y += 0.1; 
                 this.x += this.v.x; this.y += this.v.y;
                 this.alpha -= this.decay;
             }
@@ -91,11 +98,11 @@
         let particles = [];
 
         function createFirework(x, y) {
-            playExplosionSound();
-            const color = `hsl(${Math.random() * 360}, 100%, 65%)`;
-            for (let i = 0; i < 70; i++) {
+            playBoom();
+            const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+            for (let i = 0; i < 100; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 8 + 2;
+                const speed = Math.random() * 12 + 2;
                 particles.push(new Particle(x, y, color, Math.cos(angle) * speed, Math.sin(angle) * speed));
             }
         }
@@ -111,14 +118,12 @@
             requestAnimationFrame(animate);
         }
 
-        // Mouse click activate sound
-        window.addEventListener('mousedown', (e) => {
+        window.addEventListener('click', (e) => {
             createFirework(e.clientX, e.clientY);
         });
 
-        // Mobile touch activate sound
         window.addEventListener('touchstart', (e) => {
-            if (e.touches[0]) createFirework(e.touches[0].clientX, e.touches[0].clientY);
+            createFirework(e.touches[0].clientX, e.touches[0].clientY);
         });
 
         animate();
